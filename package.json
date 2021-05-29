@@ -1,0 +1,24 @@
+{
+  "name": "esp32cam_secure_server",
+  "version": "1.0.0",
+  "description": "Node server using WSS to stream multiple esp32 cams",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SilentGamelan/ESP32cam_secure_server.git"
+  },
+  "author": "SilentGamelan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SilentGamelan/ESP32cam_secure_server/issues"
+  },
+  "homepage": "https://github.com/SilentGamelan/ESP32cam_secure_server#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "path": "^0.12.7",
+    "ws": "^7.4.6"
+  }
+}

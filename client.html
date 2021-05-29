@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="/styles.css">
+        <title>Web Browser Client</title>
+    </head>
+
+<!-- 
+    rework this, should be dynamically created and placed into DOM with correct CAM ID in title, etc
+    Also need to fix the empty src value to be compliant
+
+    Ensure use consistent naming scheme to ensure isolation of html and js (html ids use hyphens, not underscores)
+-->
+    <body>
+        <h1>ESP32CAM Multistream Dashboard</h1>
+        <div>class="card"</div>
+        <img id="ESP32-1" src="" />
+        <h2 class="cam-title">ESP32-1 LIVE <span class="dot" id="cam-1-red-dot" style="visibility: hidden;"></span></h2>
+        <!-- can't you just pass the reference rather than the name as a string? -->
+        <!-- think should -->
+        <button class="cam-toggle-button" id="cam-1-stream-toggle" onclick="toggleCamStream('cam-1-stream-toggle')">PLAY</button>
+        <button class="cam-save-image-button" id="cam-1-save-button" onclick="saveCamImage('cam-1-save-button')">Save as JPG</button>
+    </body>
+</html>

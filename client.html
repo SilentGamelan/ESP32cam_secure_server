@@ -10,15 +10,117 @@
     Also need to fix the empty src value to be compliant
 
     Ensure use consistent naming scheme to ensure isolation of html and js (html ids use hyphens, not underscores)
+
+    Give ids to the enclosing divs for targetting
+
+    need to add styling
 -->
     <body>
         <h1>ESP32CAM Multistream Dashboard</h1>
-        <div>class="card"</div>
-        <img id="ESP32-1" src="" />
-        <h2 class="cam-title">ESP32-1 LIVE <span class="dot" id="cam-1-red-dot" style="visibility: hidden;"></span></h2>
-        <!-- can't you just pass the reference rather than the name as a string? -->
-        <!-- think should -->
-        <button class="cam-toggle-button" id="cam-1-stream-toggle" onclick="toggleCamStream('cam-1-stream-toggle')">PLAY</button>
-        <button class="cam-save-image-button" id="cam-1-save-button" onclick="saveCamImage('cam-1-save-button')">Save as JPG</button>
+        <div class="cambox-container">
+            <div class="cam-box">
+            <img id="ESP32CAM-1" src="" />
+            <h2 class="cam-title">ESP32-1 LIVE <span class="dot" id="cam-1-red-dot" style="visibility: hidden;"></span></h2>
+            <!-- can't you just pass the reference rather than the name as a string? -->
+            <!-- think should -->
+            <button class="cam-toggle-button" id="cam-1-stream-toggle" onclick="toggleCamStream('cam-1-stream-toggle')">PLAY</button>
+            <button class="cam-save-image-button" id="cam-1-save-button" onclick="saveCamImage('cam-1-save-button')">Save as JPG</button>
+            </div>
+
+            <div class="cam-box">
+            <img id="ESP32CAM-2" src="" />
+            <h2 class="cam-title">ESP32CAM-2 LIVE <span class="dot" id="cam-2-red-dot" style="visibility: hidden;"></span></h2>
+            
+            <button class="cam-toggle-button" id="cam-2-stream-toggle" onclick="toggleCamStream('cam-2-stream-toggle')">PLAY</button>
+            <button class="cam-save-image-button" id="cam-2-save-button" onclick="saveCamImage('cam-2-save-button')">Save as JPG</button>
+            </div>
+        </div>
+
+        <!-- 
+            Location object (from https://developer.mozilla.org/en-US/docs/Web/API/Location)
+            The Location interface represents the location (URL) of the object it is linked to. 
+            Changes done on it are reflected on the object it relates to. 
+            Both the Document and Window interface have such a linked Location, accessible via Document.location and Window.location respectively.
+        -->
+        <script>
+            const cam_1 = document.getElementById("ESP32CAM-1");
+            const cam_2 = document.getElementById("ESP32CAM-2");
+
+            let imageFrame;
+
+            console.log("host: ", window.location.hostname);
+
+            const WS_URL = 'wss://' + window.location.hostname;
+            const ws = new WebSocket(WS_URL);
+
+            let urlObject_1, urlObject_2;
+
+            // Just setting the button to false value? Odd way to reference the button, why this and not getElementBy method?
+            window["cam-1-stream-toggle"] = false;
+            window["cam-2-stream-toggle"] = false;
+
+            /**
+             *  blob URLs: Binary Large Object URL
+             * A pseudo-protocol which allows blob/file objects to used a source for objects that require an URL.
+             * For example, an image could be streamed as byte-array data instead of uploading the binary data and then re-serving that data via a URL
+             * (see https://javascript.info/blob , https://stackoverflow.com/questions/30864573/what-is-a-blob-url-and-why-it-is-used )
+             * 
+             * I think this is how the ESP32CamServer code handles the client page - it encodes it as byte data and then streams it directly, rather than having a separate
+             * equivalent static HTML file hosted elsewhere? 
+             *
+             **/
+
+            // Need to refactor this to generalise behaviour for arbitary number of cams - assuming max 2 cams
+            function saveCamImage(sourceCam) {
+                let blobUrl = source === "cam-1-stream-toggle" ? cam_1.src : cam_2.src;
+
+                if(blobUrl.indexOf("blob") == -1) {
+                    return;
+                }
+
+                let filename = sourceCam + "-" + getFormattedTime(sourceCam === "cam-1-stream-toggle" ? "ESP32CAM-1" : "ESP32CAM-2") + ".jpg";
+                downloadViaXHR(blobUrl, filename);
+            }
+
+            function getFormattedTime(sourceCam) {
+                const now = new Date();
+                const offsetMilliSecs = now.getTimezoneOffset() * 60 * 1000;
+                const localDate = new Date(now.getTime() - offsetMilliSecs);
+                const localDateString = localDate.toISOString().slice(0,19).replace(/[-:]/g, "").replace("T","-")
+                return localDateString;
+            }
+
+            // xhr.open(method, url, async(bool))
+            function downloadViaXHR(url, filename) {
+                let xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.responseType = "blob";
+                xhr.onload = () => {
+                    let urlCreator = window.URL || window.webkitURL;
+                    let imageUrl = urlCreator.createObjectURL(this.response);
+                    let tag = document.createElement("a");
+                    tag.href = imageUrl;
+                    tag.download = filename;
+                    document.body.appendChild(tag);
+                    tag.click();
+                    document.body.removeChild(tag);
+                };
+                xhr.send();
+            }
+
+            // Is this reliable?
+            function toggleCamStream(sourceCam) {
+                let x = document.getElementById(sourceCam);
+                window[sourceCam] ? x.innerHTML = "Pause" : x.innerHTML = "Play";
+                window[source] = !window[source];
+            }
+
+        
+
+
+        </script>
+
+
+
     </body>
 </html>

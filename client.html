@@ -108,19 +108,88 @@
                 xhr.send();
             }
 
-            // Is this reliable?
+            // Refactor this to allow for multiple cams
+            // Have changed it from original code to toggle based on the sourceCam bool value
+            // rather than the innerHTML
+            
             function toggleCamStream(sourceCam) {
                 let x = document.getElementById(sourceCam);
                 window[sourceCam] ? x.innerHTML = "Pause" : x.innerHTML = "Play";
                 window[source] = !window[source];
             }
 
-        
+            // Don't think this is the best way to do this, should use an eventListener
+            // And make the visibility changes via CSS I think
+            // Confused about the purpose of the setInterval functino
 
+            function hideRedDot() {
+                document.getElementById("cam-1-red-dot").style.visibility = 'hidden';
+                document.getElementById("cam-2-red-dot").style.visibility = 'hidden';
+
+            }
+
+            setInterval(hideRedDot, 1000);
+
+            // !-- Websocket and stream handling code
+
+            ws.onopen = () => {
+                console.log('connected to ${WS_URL}');
+                ws.send("WEB_CLIENT");
+            }
+
+            ws.onmessage = async(message) => {
+                const arrayBuffer = message.data;
+
+                let blobObj = new Blob([arrayBuffer]);
+                const buf = await blobObj.arrayBuffer();
+
+                // Manipulate JPG stream header minor revision number to be unique cam id
+                // !FIXME   - this nee1ds to be changed so that the UID is contained in JPG Header comment field 
+                //          - also change hard coding of connected cams (cam_!, cam_2, etc) and if statements to generalized switch statement 
+                
+                let uint8 = new Uint8Array(buf.slce(12,13));
+
+                let currentCam = unint8[0];
+                console.log("Cam ID = ", currentCam);
+
+                // !!FIXME - should hold cam objects in a dynamic array so below code can be generalized and index-based?
+                if(currentCam == 1) {
+                    imageFrame = cam_1;
+                    document.getElementById("cam-1-red-dot").style.visibility = 'visible';
+                    
+                    if(!window['cam-1-stream-toggle']) {
+                        return;
+                    }
+
+                // ?? What is the purpose of revoking the objectURL?
+                    if(urlObject_1) {
+                        URL.revokeObjectURL(urlObject_1);
+                    }
+
+                    urlObject_1 = URL.createObjectURL(blobObj);
+                    imageFrame.src = urlObject_1;
+
+                } else {
+                    imageFrame = cam_2;
+                    document.getElementById("cam-2-red-dot").style.visibility = 'visible';
+                    
+                    if(!window['cam-2-stream-toggle']) {
+                        return;
+                    }
+
+                    if(urlObject_2) {
+                        URL.revokeObjectURL(urlObject_2);
+                    }
+
+                    urlObject_2 = URL.createObjectURL(blobObj);
+                    imageFrame.src = urlObject_2;
+
+                }
+            }
+
+            // !-- End of websocket and stream handling code
 
         </script>
-
-
 
     </body>
 </html>

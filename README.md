@@ -53,4 +53,5 @@ const char* websocket_server_host = "wss://192.168.1.80";
   * Use flexbox to structure dashboard
   * Use CSS to hide/display elements
 * Refactor code to use dynamic arrays to hold stream object list instead of hardcoding handling of incoming streams
-* 
+* Fix connected client number reporting in server.js - doesn't seem to make sense
+* Fix server host address reporting, currently empty although port# is correct

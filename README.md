@@ -19,6 +19,8 @@ Uses Arduino board as a replacement for FDTI to program the ESP32 board
 * Generate Self-Signed Certificate using OpenSSL using following file names, and place in root
   * server.key
   * server.cert
+
+  !! **Note**: Windows/Linux appear to handle certs differently - windows expects private/public keys to be combined? 
 * Run server by entering 'node server.js' from terminal/commandline
 
 ### Arduino/ESP32CAM

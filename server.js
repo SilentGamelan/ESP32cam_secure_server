@@ -43,6 +43,9 @@ wsServer.on("connection", (ws, req)=> {
 });
 
 app.use(express.static("."));
+app.get("/", (req, res)=> { 
+    res.redirect("/client");
+});
 app.get("/client", (req, res) => res.sendFile(path.resolve(__dirname, "./client.html")));
-httpsServer.listen(HTTPS_PORT, () => console.log(`HTTPS server listening at ${HTTPS_PORT}`));
+httpsServer.listen(HTTPS_PORT, () => console.log(`HTTPS server listening at ${httpsServer.address().address}:${HTTPS_PORT}`));
 

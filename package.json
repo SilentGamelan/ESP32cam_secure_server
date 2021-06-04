@@ -2,7 +2,7 @@
   "name": "esp32cam_secure_server",
   "version": "1.0.0",
   "description": "Node server using WSS to stream multiple esp32 cams",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -4,15 +4,17 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const https = require('https');
 
+const HTTPS_PORT = 443;
 
 var privateKey = fs.readFileSync("server.key", "utf8");
 var certificate = fs.readFileSync("server.cert", "utf8");
 var credentials = {key: privateKey, cert: certificate};
 
-const HTTPS_PORT = 443;
+const app = express();
+
 const httpsServer = https.createServer(credentials, app);
 const wsServer = new WebSocket.Server({server: httpsServer});
-const app = express();
+
 
 let connectedClients = [];
 
@@ -42,5 +44,5 @@ wsServer.on("connection", (ws, req)=> {
 
 app.use(express.static("."));
 app.get("/client", (req, res) => res.sendFile(path.resolve(__dirname, "./client.html")));
-httpsServer.listen(HTTPS_PORT, () => console.log('HTTPS server listening at ${HTTPS_PORT}'));
+httpsServer.listen(HTTPS_PORT, () => console.log(`HTTPS server listening at ${HTTPS_PORT}`));
 

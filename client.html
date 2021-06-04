@@ -133,7 +133,7 @@
             // !-- Websocket and stream handling code
 
             ws.onopen = () => {
-                console.log('connected to ${WS_URL}');
+                console.log(`connected to ${WS_URL}`);
                 ws.send("WEB_CLIENT");
             }
 

@@ -21,10 +21,16 @@ let connectedClients = [];
 wsServer.on("connection", (ws, req)=> {
     console.log("Connected via websockets");
 
+    // !!FIXME - this section doesn't make sense to me, what is it supposed to be reporting?
+    //         - the index of the client according to the connectedClients list? 
     ws.on("message", (data) => {
         if(data.indexOf("WEB_CLIENT") !== -1) {
             connectedClients.push(ws);
             console.log("New WEB_CLIENT added: " + data.indexOf("WEB_CLIENT") + "/" + connectedClients.length);
+            // data only contains "WEB_CLIENT"
+            // console.log('\n', data);
+            // Maybe there is some kind of UID in the websocket object that should be referred to?
+            //console.log(ws);            
             return; 
         }
 

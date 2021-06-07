@@ -1,6 +1,7 @@
 #include "esp_camera.h"
 #include <WiFi.h>
-#include <ArduinoWebsockets.h>
+//#include <ArduinoWebsockets.h>
+#include <Websockets2_Generic.h>
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
 
@@ -9,11 +10,15 @@ const char* ssid = "SSID";
 const char* password = "PASSWORD";
 const char* websocket_server_host = "wss://192.168.1.80";
 
-using namespace websockets;
+const int INITIAL_WIFI_CONNECTION_TIMEOUT = 10;
+//using namespace websockets;
+using namespace websockets2_generic;
+
 WebsocketsClient client;
 bool isWebSocketConnected;
 
 void onEventsCallback(WebsocketsEvent event, String data){
+ /**
   if(event == WebsocketsEvent::ConnectionOpened){
     Serial.println("Connection Opened");
     isWebSocketConnected = true;
@@ -22,13 +27,39 @@ void onEventsCallback(WebsocketsEvent event, String data){
     isWebSocketConnected = false;
     webSocketConnect();
   }
+**/
+  switch (data)
+  {
+  case WebsocketsEvent::ConnectionOpened:
+    Serial.println("Connection Opened");
+    isWebSocketConnected = true;
+    break;
+  case WebsocketsEvent::ConnectionClosed:
+    Serial.println("Connection Closed");
+    isWebSocketConnected = false;
+    break;
+  case WebsSocketsEvent::GotPing:
+    Serial.println("Ping!");
+    break;
+  case WebSocketsEvent::GotPong:
+    Serial.println("Pong!");
+    break;
+  default:
+    Serial.println("Unrecognised Websocket Event");
+    break;
+  }
 }
 
 void setup() {
   isWebSocketConnected = false;
   Serial.begin(115200);
   Serial.println();
+  Serial.println("Starting ESP32Cam Websockets client (Insecure mode enabled");
+  Serial.println("Detected board: " + String(ARDUINO_BOARD));
+  Serial.println("WebSockets2_Generic library version: " + WEBSOCKETS_2_GENERIC_VERSION);
+  Serial.println("\n");
 
+  Serial.println("Initialising board pins...");
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -55,6 +86,7 @@ void setup() {
   config.fb_count = 2;
 
   // camera init
+  Serial.println("Initalizing Camera");
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
@@ -62,23 +94,47 @@ void setup() {
   }
  
 
+ // consider using interrupts and sleep mode to save power - periodically wake back up to try again?    
   WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+  
+  while(Wifi.status() != WL_CONNECTED) {
+    Serial.println("Attempting to connect to WIFI");
+    for(int i = 0; i < INITIAL_WIFI_CONNECTION_TIMEOUT && WIFi.status() != WL_CONNECTED; i++) {
     Serial.print(".");
+    delay(1000);
+    }
+    if(i == INITIAL_WIFI_CONNECTION_TIMEOUT) {
+      Serial.println("");
+     // Serial.println("WiFi still not connected ")
+    }
+  } 
+  
+  Serial.println("WIFI CONNECTED!")
+ /**
+  if(WiFi.status() != WL_CONNECTED) {
+    Serial.println("");
+    Serial.println("!! Wifi Not Connected after 10 seconds")
+  } else {
+    Serial.println("");
+    Serial.println("WiFi connected");
+**/
+    client.onEvent(onEventsCallback);
+    webSocketConnect();
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
-
-  client.onEvent(onEventsCallback);
-  webSocketConnect();
 }
 
 void webSocketConnect(){
+  int websocketConnectionAttempt = 0;
+  Serial.println("Attempting to establish websocket connection");
    while(!client.connect(websocket_server_host)){
     delay(500);
     Serial.print(".");
+    websocketConnectionAttempt++:
+    if(websocke tConnectionAttempt == 10) {
+      websocketConnectionAttempt = 0;
+      Serial.println("");
+      Serial.println("Reattempting websocket Connection");
+    }
   }
   Serial.println("Websocket Connected!");
 }

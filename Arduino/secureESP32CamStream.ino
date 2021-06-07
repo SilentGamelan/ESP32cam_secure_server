@@ -9,10 +9,11 @@
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 const char* websocket_server_host = "wss://192.168.1.80";
-// Uncomment and sent this var if using a signed cert
-//const char* ssl_ca_cert = nullptr;
+// set this var if using a signed cert
+const char* ssl_ca_cert = nullptr;
 const int INITIAL_WIFI_CONNECTION_TIMEOUT = 10;
 const bool USE_INSECURE_MODE = true;
+const bool SERIAL_PRINT_MESSAGES = true;
 //using namespace websockets;
 using namespace websockets2_generic;
 
@@ -52,20 +53,34 @@ void onEventsCallback(WebsocketsEvent event, String data){
   }
 }
 
-void onMessageCallback(WebsocketsMessage msg, String data) {
+void onMessageCallback(WebsocketsMessage msg) {
   Serial.print("Received Message of type: " + msg.type);
-  switch (msg.type) {
-    case "Text": 
-      Serial.print(data);
-      break;
-    default:
-      Serial.print("Not text type - omitting dump");
-      break;
+  
+ 
+    switch (msg.type) {
+      case MESSAGEType::Text:  
+        Serial.print("Text Message");
+        if(SERIAL_PRINT_MESSAGES) {
+          Serial.print("---STARTOFMESSAGE--");
+          Serial.print(msg.data());
+          Serial.print("---ENDOFMESSAGE---");
+        }
+        break;
+      case MESSAGEType::Binary:
+        Serial.print("Binary Message");
+        break;
+      default:
+        Serial.print("Not text or binary type");
+        break;
+    }
+  } else {
+    Serial.print("Message logging is DISABLED");
   }
 }
 
 void setup() {
   isWebSocketConnected = false;
+  
   Serial.begin(115200);
   Serial.println();
   Serial.println("Starting ESP32Cam Websockets client (Insecure mode enabled");
@@ -133,8 +148,21 @@ void setup() {
     Serial.println("WiFi connected");
 **/
     client.onEvent(onEventsCallback);
-    webSocketConnect();
+    client.onMessage(onMessageCallback);
+
+  if(USE_INSECURE_MODE) {
+    client.setInsecure();
+  } else {
+    if(!ssl_ca_cert) {
+      Serial.print("!! SECURE MODE ERROR: SSL Certificate Not set!!")
+    } else {
+      client.setCACert(ssl_ca_cert)
+    }
   }
+    webSocketConnect();
+  
+
+  
 }
 
 void webSocketConnect(){
@@ -142,15 +170,14 @@ void webSocketConnect(){
   Serial.println("Attempting to establish websocket connection");
    while(!client.connect(websocket_server_host)){
     delay(500);
-    Serial.print(".");
+    Serial.println(".");
     websocketConnectionAttempt++:
     if(websocke tConnectionAttempt == 10) {
       websocketConnectionAttempt = 0;
-      Serial.println("");
-      Serial.println("Reattempting websocket Connection");
+      Serial.print("Reattempting websocket Connection");
     }
   }
-  Serial.println("Websocket Connected!");
+  Serial.println(" Websocket Connected!");
 }
 
 void loop() {

@@ -1,7 +1,7 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 //#include <ArduinoWebsockets.h>
-#include <Websockets2_Generic.h>
+#include <WebSockets2_Generic.h>
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
 
@@ -31,7 +31,7 @@ void onEventsCallback(WebsocketsEvent event, String data){
     webSocketConnect();
   }
 **/
-  switch (data)
+  switch (event)
   {
   case WebsocketsEvent::ConnectionOpened:
     Serial.println("Connection Opened");
@@ -41,10 +41,10 @@ void onEventsCallback(WebsocketsEvent event, String data){
     Serial.println("Connection Closed");
     isWebSocketConnected = false;
     break;
-  case WebsSocketsEvent::GotPing:
+  case WebsocketsEvent::GotPing:
     Serial.println("Ping!");
     break;
-  case WebSocketsEvent::GotPong:
+  case WebsocketsEvent::GotPong:
     Serial.println("Pong!");
     break;
   default:
@@ -54,29 +54,29 @@ void onEventsCallback(WebsocketsEvent event, String data){
 }
 
 void onMessageCallback(WebsocketsMessage msg) {
-  Serial.print("Received Message of type: " + msg.type);
+  Serial.print("Received Message of type: ");
   
  
-    switch (msg.type) {
-      case MESSAGEType::Text:  
-        Serial.print("Text Message");
+    switch (msg.type()) {
+      case MessageType::Text:  
+        Serial.println("Text Message");
         if(SERIAL_PRINT_MESSAGES) {
           Serial.print("---STARTOFMESSAGE--");
           Serial.print(msg.data());
           Serial.print("---ENDOFMESSAGE---");
+        } else {
+          Serial.print("Message logging is DISABLED");
         }
         break;
-      case MESSAGEType::Binary:
+      case MessageType::Binary:
         Serial.print("Binary Message");
         break;
       default:
         Serial.print("Not text or binary type");
         break;
     }
-  } else {
-    Serial.print("Message logging is DISABLED");
   }
-}
+
 
 void setup() {
   isWebSocketConnected = false;
@@ -85,7 +85,7 @@ void setup() {
   Serial.println();
   Serial.println("Starting ESP32Cam Websockets client (Insecure mode enabled");
   Serial.println("Detected board: " + String(ARDUINO_BOARD));
-  Serial.println("WebSockets2_Generic library version: " + WEBSOCKETS_2_GENERIC_VERSION);
+ // Serial.println("WebSockets2_Generic library version: " + WEBSOCKETS_2_GENERIC_VERSION);
   Serial.println("\n");
 
   Serial.println("Initialising board pins...");
@@ -125,10 +125,10 @@ void setup() {
 
  // consider using interrupts and sleep mode to save power - periodically wake back up to try again?    
   WiFi.begin(ssid, password);
-  
-  while(Wifi.status() != WL_CONNECTED) {
+  int i;
+  while(WiFi.status() != WL_CONNECTED) {
     Serial.println("Attempting to connect to WIFI");
-    for(int i = 0; i < INITIAL_WIFI_CONNECTION_TIMEOUT && WIFi.status() != WL_CONNECTED; i++) {
+    for(i = 0; i < INITIAL_WIFI_CONNECTION_TIMEOUT && WiFi.status() != WL_CONNECTED; i++) {
     Serial.print(".");
     delay(1000);
     }
@@ -138,7 +138,7 @@ void setup() {
     }
   } 
   
-  Serial.println("WIFI CONNECTED!")
+  Serial.println("WIFI CONNECTED!");
  /**
   if(WiFi.status() != WL_CONNECTED) {
     Serial.println("");
@@ -154,9 +154,9 @@ void setup() {
     client.setInsecure();
   } else {
     if(!ssl_ca_cert) {
-      Serial.print("!! SECURE MODE ERROR: SSL Certificate Not set!!")
+      Serial.print("!! SECURE MODE ERROR: SSL Certificate Not set!!");
     } else {
-      client.setCACert(ssl_ca_cert)
+      client.setCACert(ssl_ca_cert);
     }
   }
     webSocketConnect();
@@ -171,8 +171,8 @@ void webSocketConnect(){
    while(!client.connect(websocket_server_host)){
     delay(500);
     Serial.println(".");
-    websocketConnectionAttempt++:
-    if(websocke tConnectionAttempt == 10) {
+    websocketConnectionAttempt++;
+    if(websocketConnectionAttempt == 10) {
       websocketConnectionAttempt = 0;
       Serial.print("Reattempting websocket Connection");
     }

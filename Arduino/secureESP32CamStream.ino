@@ -9,8 +9,10 @@
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 const char* websocket_server_host = "wss://192.168.1.80";
-
+// Uncomment and sent this var if using a signed cert
+//const char* ssl_ca_cert = nullptr;
 const int INITIAL_WIFI_CONNECTION_TIMEOUT = 10;
+const bool USE_INSECURE_MODE = true;
 //using namespace websockets;
 using namespace websockets2_generic;
 
@@ -47,6 +49,18 @@ void onEventsCallback(WebsocketsEvent event, String data){
   default:
     Serial.println("Unrecognised Websocket Event");
     break;
+  }
+}
+
+void onMessageCallback(WebsocketsMessage msg, String data) {
+  Serial.print("Received Message of type: " + msg.type);
+  switch (msg.type) {
+    case "Text": 
+      Serial.print(data);
+      break;
+    default:
+      Serial.print("Not text type - omitting dump");
+      break;
   }
 }
 
